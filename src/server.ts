@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { runPipeline } from "./lib/pipeline";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -39,6 +40,31 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+
+    // Pipeline endpoint — called by Vercel Cron Job daily at 6h UTC
+    if (url.pathname === "/api/pipeline" && request.method === "GET") {
+      const secret = request.headers.get("x-cron-secret");
+      if (secret !== process.env["CRON_SECRET"]) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      try {
+        const result = await runPipeline();
+        return new Response(JSON.stringify({ ok: true, ...result }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ ok: false, error: (err as Error).message }), {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        });
+      }
+    }
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
