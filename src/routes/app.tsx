@@ -1070,10 +1070,10 @@ function Footer() {
         SaaS Radar AI · scanning 842 sources · v4.0.2
       </div>
       <div className="flex gap-4 uppercase tracking-widest">
-        <a href="#" className="hover:text-foreground">API</a>
-        <a href="#" className="hover:text-foreground">Docs</a>
-        <a href="#" className="hover:text-foreground">Privacy</a>
-        <a href="#" className="hover:text-foreground">Terms</a>
+        <Link to="/docs" className="hover:text-foreground">Docs</Link>
+        <Link to="/billing" className="hover:text-foreground">API</Link>
+        <Link to="/docs" className="hover:text-foreground">Privacy</Link>
+        <Link to="/docs" className="hover:text-foreground">Terms</Link>
       </div>
     </footer>
   );

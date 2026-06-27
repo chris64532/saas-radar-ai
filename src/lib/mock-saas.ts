@@ -48,7 +48,7 @@ export const SAAS: SaasItem[] = [
     growth: growth as number,
     detectedAt: `${(i % 14) + 1}d ago`,
     spark: Array.from({ length: 16 }, () => 30 + Math.floor(r() * 70)),
-    url: `https://example.com/${(name as string).toLowerCase()}`,
+    url: `https://www.google.com/search?q=${encodeURIComponent(name as string)}`,
   };
 });
 

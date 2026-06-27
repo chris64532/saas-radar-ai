@@ -8,10 +8,10 @@ export const Route = createFileRoute("/billing")({
 });
 
 const INVOICES = [
-  { id: "INV-2026-006", date: "Jun 01, 2026", amount: "$29.00", status: "Paid" },
-  { id: "INV-2026-005", date: "May 01, 2026", amount: "$29.00", status: "Paid" },
-  { id: "INV-2026-004", date: "Apr 01, 2026", amount: "$29.00", status: "Paid" },
-  { id: "INV-2026-003", date: "Mar 01, 2026", amount: "$29.00", status: "Paid" },
+  { id: "INV-2026-006", date: "Jun 01, 2026", amount: "€19.00", status: "Paid" },
+  { id: "INV-2026-005", date: "May 01, 2026", amount: "€19.00", status: "Paid" },
+  { id: "INV-2026-004", date: "Apr 01, 2026", amount: "€19.00", status: "Paid" },
+  { id: "INV-2026-003", date: "Mar 01, 2026", amount: "€19.00", status: "Paid" },
 ];
 
 function Billing() {
@@ -23,7 +23,7 @@ function Billing() {
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-xs font-mono uppercase tracking-wider text-primary">Current plan</div>
-                <div className="mt-1 text-2xl font-semibold">Pro · $29/mo</div>
+                <div className="mt-1 text-2xl font-semibold">Pro · €19/mo</div>
                 <p className="mt-1 text-sm text-muted-foreground">Renews on July 1, 2026 · Visa ending 4242</p>
               </div>
               <div className="flex gap-2">
