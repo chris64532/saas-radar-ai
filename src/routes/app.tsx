@@ -807,7 +807,7 @@ function DetailPanel({ item }: { item: SaaSItem }) {
 
       <div>
         <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-          AI Score Breakdown
+          Score Breakdown
         </div>
         <div className="space-y-2.5">
           {factors.map((f) => (
@@ -829,7 +829,7 @@ function DetailPanel({ item }: { item: SaaSItem }) {
 
       <div className="rounded-xl border border-border-subtle bg-background/40 p-4">
         <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
-          AI Summary
+          Analysis
         </div>
         {isLoading ? (
           <div className="space-y-1.5 animate-pulse">

@@ -95,7 +95,7 @@ function Landing() {
           <div className="mt-12 grid gap-6 md:grid-cols-3">
             {[
               { icon: Radar, n: "01", t: "Continuous discovery", d: "We crawl Product Hunt, GitHub, Reddit, HN and 12+ sources every minute to catch new SaaS the moment they launch." },
-              { icon: Sparkles, n: "02", t: "AI scoring engine", d: "Our model evaluates traction, hype, backlinks, dev activity & sentiment — outputs a 0-100 Growth Score." },
+              { icon: Sparkles, n: "02", t: "Proprietary scoring engine", d: "Our model evaluates traction, backlinks, dev activity & sentiment — outputs a 0-100 Growth Score." },
               { icon: Bell, n: "03", t: "Realtime alerts", d: "Set rules by category, score threshold or growth spikes. Get notified before competitors do." },
             ].map((s) => (
               <div key={s.n} className="rounded-xl border border-border-subtle bg-surface p-6">

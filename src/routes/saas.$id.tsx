@@ -85,7 +85,7 @@ function SaasDetail() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <Card title="AI Summary" icon={Sparkles}>
+            <Card title="Analysis" icon={Sparkles}>
               {s.ai_summary ? (
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.ai_summary}</p>
               ) : (
@@ -122,7 +122,7 @@ function SaasDetail() {
                 <Metric icon={Eye} label="Traffic" value={`${(8.2 + s.score / 30).toFixed(1)}k/mo`} />
                 <Metric icon={Link2} label="Backlinks" value={`${412 + s.score * 4}`} />
                 <Metric icon={TrendingUp} label="Growth" value={`+${s.growth}%`} accent />
-                <Metric icon={Sparkles} label="Hype score" value={`${Math.round(s.score * 0.92)}`} />
+                <Metric icon={Sparkles} label="Signal" value={`${Math.round(s.score * 0.92)}`} />
               </dl>
             </Card>
             <Card title="Source">
