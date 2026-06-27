@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAiSummary } from "@/lib/ai-summary";
+import { fetchFeed, type FeedItem } from "@/lib/fetch-feed";
 import {
   Activity,
   ArrowUpRight,
@@ -54,114 +55,42 @@ interface SaaSItem {
   spark: number[];
   initials: string;
   tint: string;
+  ai_summary?: string;
 }
 
-const FEED: SaaSItem[] = [
-  {
-    rank: 1,
-    name: "FluxFlow AI",
-    tagline: "Autonomous video generation nodes",
-    category: "AI",
-    score: 94,
-    growth: 412.5,
-    source: "GitHub",
-    tag: "HOT",
-    spark: [12, 18, 22, 30, 28, 44, 52, 68, 74, 88, 94],
-    initials: "FF",
-    tint: "from-emerald-400/30 to-emerald-500/5",
-  },
-  {
-    rank: 2,
-    name: "VectorShift",
-    tagline: "LLM orchestration for production",
-    category: "AI",
-    score: 91,
-    growth: 284.1,
-    source: "ProductHunt",
-    tag: "HOT",
-    spark: [20, 22, 28, 35, 40, 50, 55, 62, 70, 78, 86],
-    initials: "VS",
-    tint: "from-emerald-400/30 to-emerald-500/5",
-  },
-  {
-    rank: 3,
-    name: "OmniCRM",
-    tagline: "Indie alternative to Salesforce",
-    category: "Marketing",
-    score: 86,
-    growth: 188.6,
-    source: "ProductHunt",
-    tag: "RISING",
-    spark: [30, 28, 32, 38, 42, 50, 58, 60, 66, 70, 78],
-    initials: "OC",
-    tint: "from-sky-400/30 to-sky-500/5",
-  },
-  {
-    rank: 4,
-    name: "StackLock",
-    tagline: "Next-gen dependency security",
-    category: "Dev Tools",
-    score: 82,
-    growth: 142.0,
-    source: "Reddit",
-    tag: "RISING",
-    spark: [18, 22, 26, 28, 34, 38, 42, 50, 58, 62, 70],
-    initials: "SL",
-    tint: "from-sky-400/30 to-sky-500/5",
-  },
-  {
-    rank: 5,
-    name: "PromptLayer",
-    tagline: "CMS for AI prompts",
-    category: "AI",
-    score: 79,
-    growth: 88.2,
-    source: "Reddit",
-    tag: "RISING",
-    spark: [25, 28, 30, 32, 38, 42, 46, 50, 54, 60, 64],
-    initials: "PL",
-    tint: "from-sky-400/30 to-sky-500/5",
-  },
-  {
-    rank: 6,
-    name: "FluxDB.io",
-    tagline: "Edge-native vector database",
-    category: "Dev Tools",
-    score: 74,
-    growth: 67.4,
-    source: "IndieHackers",
-    tag: "GEM",
-    spark: [10, 12, 14, 18, 20, 22, 28, 34, 42, 48, 56],
-    initials: "FD",
-    tint: "from-fuchsia-400/30 to-fuchsia-500/5",
-  },
-  {
-    rank: 7,
-    name: "QueryLayer",
-    tagline: "Real-time SQL analytics",
-    category: "Dev Tools",
-    score: 71,
-    growth: 54.0,
-    source: "GitHub",
-    tag: null,
-    spark: [20, 22, 24, 24, 26, 30, 32, 36, 40, 44, 48],
-    initials: "QL",
-    tint: "from-slate-400/20 to-slate-500/5",
-  },
-  {
-    rank: 8,
-    name: "LedgerKit",
-    tagline: "Open-source fintech ledger",
-    category: "Finance",
-    score: 68,
-    growth: 41.3,
-    source: "IndieHackers",
-    tag: "GEM",
-    spark: [12, 14, 16, 18, 22, 24, 28, 32, 36, 40, 44],
-    initials: "LK",
-    tint: "from-fuchsia-400/30 to-fuchsia-500/5",
-  },
-];
+function toTag(score: number): Tag {
+  if (score >= 88) return "HOT";
+  if (score >= 75) return "RISING";
+  if (score >= 60) return "GEM";
+  return null;
+}
+
+function toTint(source: Source): string {
+  return {
+    GitHub: "from-emerald-400/30 to-emerald-500/5",
+    ProductHunt: "from-sky-400/30 to-sky-500/5",
+    Reddit: "from-orange-400/30 to-orange-500/5",
+    IndieHackers: "from-fuchsia-400/30 to-fuchsia-500/5",
+  }[source];
+}
+
+function feedItemToSaaSItem(item: FeedItem, rank: number): SaaSItem {
+  const source = item.source as Source;
+  return {
+    rank,
+    name: item.name,
+    tagline: item.tagline,
+    category: item.category,
+    score: item.score,
+    growth: item.growth,
+    source,
+    tag: toTag(item.score),
+    spark: item.spark,
+    initials: item.name.slice(0, 2).toUpperCase(),
+    tint: toTint(source),
+    ai_summary: item.ai_summary,
+  };
+}
 
 const CATEGORIES = [
   { name: "All Sectors", count: 1204, active: true },
@@ -208,7 +137,16 @@ const PLANS = [
 ];
 
 function Dashboard() {
-  const [selected, setSelected] = useState<SaaSItem>(FEED[0]);
+  const { data: rawFeed = [] } = useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchFeed(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const FEED: SaaSItem[] = rawFeed.map((item, i) => feedItemToSaaSItem(item, i + 1));
+
+  const [selected, setSelected] = useState<SaaSItem | null>(null);
+  const activeItem = selected ?? FEED[0] ?? null;
   const [category, setCategory] = useState("All Sectors");
   const filtered = useMemo(
     () =>
@@ -217,7 +155,7 @@ function Dashboard() {
         : FEED.filter((s) =>
             category.toLowerCase().includes(s.category.toLowerCase()),
           ),
-    [category],
+    [category, FEED],
   );
 
   return (
@@ -234,10 +172,10 @@ function Dashboard() {
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
             <FeedTable
               items={filtered}
-              selected={selected}
+              selected={activeItem}
               onSelect={setSelected}
             />
-            <DetailPanel item={selected} />
+            {activeItem && <DetailPanel item={activeItem} />}
           </div>
           <AlertsAndPricing />
           <Footer />
@@ -565,7 +503,7 @@ function FeedTable({
   onSelect,
 }: {
   items: SaaSItem[];
-  selected: SaaSItem;
+  selected: SaaSItem | null;
   onSelect: (i: SaaSItem) => void;
 }) {
   return (
@@ -605,7 +543,7 @@ function FeedTable({
           </thead>
           <tbody>
             {items.map((i) => {
-              const active = i.name === selected.name;
+              const active = selected ? i.name === selected.name : false;
               return (
                 <tr
                   key={i.name}
@@ -789,19 +727,22 @@ function DetailPanel({ item }: { item: SaaSItem }) {
     { label: "Landing Page Quality (AI)", value: 88 },
   ];
 
+  // Use pre-computed summary from DB if available, otherwise call AI on demand
   const { data: summary, isLoading } = useQuery({
     queryKey: ["ai-summary", item.name],
     queryFn: () =>
-      fetchAiSummary({
-        data: {
-          name: item.name,
-          tagline: item.tagline,
-          category: item.category,
-          source: item.source,
-          score: item.score,
-          growth: item.growth,
-        },
-      }),
+      item.ai_summary
+        ? Promise.resolve(item.ai_summary)
+        : fetchAiSummary({
+            data: {
+              name: item.name,
+              tagline: item.tagline,
+              category: item.category,
+              source: item.source,
+              score: item.score,
+              growth: item.growth,
+            },
+          }),
     staleTime: Infinity,
   });
 
