@@ -188,7 +188,7 @@ function Dashboard() {
 
         <div className="flex-1 px-8 py-8 space-y-10 max-w-[1600px] w-full mx-auto">
           <Hero totalCount={FEED.length} />
-          <MetricsRow />
+          <MetricsRow feed={FEED} />
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
             <FeedTable
               items={filtered}
@@ -351,13 +351,13 @@ function TopBar() {
         </div>
       </div>
 
-      <button className="size-9 grid place-items-center rounded-md border border-border-subtle hover:bg-white/5 transition">
+      <Link to="/alerts" className="size-9 grid place-items-center rounded-md border border-border-subtle hover:bg-white/5 transition">
         <Bell className="size-4 text-muted-foreground" />
-      </button>
-      <button className="size-9 grid place-items-center rounded-md border border-border-subtle hover:bg-white/5 transition">
+      </Link>
+      <Link to="/settings" className="size-9 grid place-items-center rounded-md border border-border-subtle hover:bg-white/5 transition">
         <Settings className="size-4 text-muted-foreground" />
-      </button>
-      <div className="size-9 rounded-full bg-gradient-to-br from-primary/40 to-accent/40 border border-border-subtle" />
+      </Link>
+      <Link to="/settings" className="size-9 rounded-full bg-gradient-to-br from-primary/40 to-accent/40 border border-border-subtle hover:ring-2 hover:ring-primary/30 transition" />
     </header>
   );
 }
@@ -435,28 +435,37 @@ function Hero({ totalCount }: { totalCount: number }) {
 /* Metrics                                                            */
 /* ------------------------------------------------------------------ */
 
-function MetricsRow() {
+function MetricsRow({ feed }: { feed: SaaSItem[] }) {
+  const avgScore = feed.length
+    ? (feed.reduce((s, i) => s + i.score, 0) / feed.length).toFixed(1)
+    : "—";
+  const avgScoreNum = feed.length
+    ? Math.round(feed.reduce((s, i) => s + i.score, 0) / feed.length)
+    : 0;
+  const gems = feed.filter((i) => i.tag === "GEM").length;
+  const hot = feed.filter((i) => i.tag === "HOT").length;
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <MetricCard
-        label="New detections · 24h"
-        value="+142"
-        delta="+12% vs yesterday"
+        label="Signals detected"
+        value={`+${feed.length}`}
+        delta={`${hot} trending · updated today`}
         accent="primary"
         icon={Zap}
       />
       <MetricCard
         label="Avg. Growth Score"
-        value="68.4"
-        delta="Median sector velocity"
+        value={avgScore}
+        delta="Median across all sources"
         accent="accent"
         icon={Activity}
-        progress={68}
+        progress={avgScoreNum}
       />
       <MetricCard
-        label="Hidden Gems uncovered"
-        value="11"
-        delta="2 in the last hour"
+        label="Hidden Gems"
+        value={String(gems)}
+        delta="Score 60–74, low noise"
         accent="gem"
         icon={Gem}
       />
