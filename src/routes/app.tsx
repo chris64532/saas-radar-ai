@@ -92,13 +92,13 @@ function feedItemToSaaSItem(item: FeedItem, rank: number): SaaSItem {
   };
 }
 
-const CATEGORIES = [
-  { name: "All Sectors", count: 1204, active: true },
-  { name: "Artificial Intelligence", count: 412 },
-  { name: "Developer Tools", count: 286 },
-  { name: "Marketing Stack", count: 198 },
-  { name: "Fintech", count: 142 },
-  { name: "No-Code", count: 96 },
+const CATEGORY_NAMES = [
+  "All Sectors",
+  "Artificial Intelligence",
+  "Developer Tools",
+  "Marketing Stack",
+  "Fintech",
+  "No-Code",
 ];
 
 const PLANS = [
@@ -145,6 +145,15 @@ function Dashboard() {
 
   const FEED: SaaSItem[] = rawFeed.map((item, i) => feedItemToSaaSItem(item, i + 1));
 
+  const categories = useMemo(() => {
+    return CATEGORY_NAMES.map((name) => ({
+      name,
+      count: name === "All Sectors"
+        ? FEED.length
+        : FEED.filter((s) => name.toLowerCase().includes(s.category.toLowerCase())).length,
+    }));
+  }, [FEED]);
+
   const [selected, setSelected] = useState<SaaSItem | null>(null);
   const activeItem = selected ?? FEED[0] ?? null;
   const [category, setCategory] = useState("All Sectors");
@@ -160,14 +169,14 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen flex text-foreground font-sans">
-      <Sidebar category={category} onChange={setCategory} />
+      <Sidebar category={category} onChange={setCategory} categories={categories} />
 
       <main className="flex-1 min-w-0 flex flex-col">
         <TopBar />
         <Ticker />
 
         <div className="flex-1 px-8 py-8 space-y-10 max-w-[1600px] w-full mx-auto">
-          <Hero />
+          <Hero totalCount={FEED.length} />
           <MetricsRow />
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
             <FeedTable
@@ -192,9 +201,11 @@ function Dashboard() {
 function Sidebar({
   category,
   onChange,
+  categories,
 }: {
   category: string;
   onChange: (c: string) => void;
+  categories: { name: string; count: number }[];
 }) {
   return (
     <aside className="hidden lg:flex w-64 shrink-0 border-r border-border-subtle bg-background/60 backdrop-blur-xl flex-col sticky top-0 h-screen">
@@ -225,7 +236,7 @@ function Sidebar({
           Sectors
         </div>
         <div className="space-y-0.5">
-          {CATEGORIES.map((c) => {
+          {categories.map((c) => {
             const isActive = c.name === category;
             return (
               <button
@@ -375,13 +386,13 @@ function Ticker() {
 /* Hero                                                               */
 /* ------------------------------------------------------------------ */
 
-function Hero() {
+function Hero({ totalCount }: { totalCount: number }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
       <div>
         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-primary/20 bg-primary/5 text-[11px] font-mono uppercase tracking-widest text-primary mb-4">
           <span className="size-1.5 rounded-full bg-primary live-dot" />
-          Discovery Engine · 1,204 live signals
+          Discovery Engine · {totalCount} live signals
         </div>
         <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-balance">
           The Bloomberg terminal

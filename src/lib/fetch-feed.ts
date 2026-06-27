@@ -10,12 +10,20 @@ export const fetchFeed = createServerFn({ method: "GET" }).handler(async () => {
       .order("score", { ascending: false })
       .limit(50);
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      console.error("[fetchFeed] Supabase error:", error.message);
       return fallback();
     }
 
+    if (!data || data.length === 0) {
+      console.warn("[fetchFeed] Supabase returned 0 rows — using mock fallback");
+      return fallback();
+    }
+
+    console.log(`[fetchFeed] Loaded ${data.length} items from Supabase`);
     return data.map(toFeedItem);
-  } catch {
+  } catch (err) {
+    console.error("[fetchFeed] Exception:", err);
     return fallback();
   }
 });
