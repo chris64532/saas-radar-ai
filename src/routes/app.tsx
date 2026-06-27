@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchAiSummary } from "@/lib/ai-summary";
@@ -44,6 +44,7 @@ type Source = "GitHub" | "ProductHunt" | "Reddit" | "IndieHackers";
 type Tag = "HOT" | "RISING" | "GEM" | null;
 
 interface SaaSItem {
+  id: string;
   rank: number;
   name: string;
   tagline: string;
@@ -77,6 +78,7 @@ function toTint(source: Source): string {
 function feedItemToSaaSItem(item: FeedItem, rank: number): SaaSItem {
   const source = item.source as Source;
   return {
+    id: item.id,
     rank,
     name: item.name,
     tagline: item.tagline,
@@ -100,6 +102,22 @@ const CATEGORY_NAMES = [
   "Fintech",
   "No-Code",
 ];
+
+// Map sidebar display names → raw category keywords from scrapers
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  "Artificial Intelligence": ["ai", "artificial intelligence", "llm", "ml", "machine learning"],
+  "Developer Tools": ["dev tools", "developer tools", "devtools", "infra", "infrastructure", "security", "database", "api"],
+  "Marketing Stack": ["marketing", "sales", "crm", "growth", "seo"],
+  "Fintech": ["finance", "fintech", "payment", "billing", "accounting"],
+  "No-Code": ["no-code", "nocode", "no code", "low-code"],
+};
+
+function matchesCategory(saasCategory: string, sidebarCategory: string): boolean {
+  if (sidebarCategory === "All Sectors") return true;
+  const keywords = CATEGORY_KEYWORDS[sidebarCategory] ?? [];
+  const cat = saasCategory.toLowerCase();
+  return keywords.some((kw) => cat.includes(kw));
+}
 
 const PLANS = [
   {
@@ -148,9 +166,7 @@ function Dashboard() {
   const categories = useMemo(() => {
     return CATEGORY_NAMES.map((name) => ({
       name,
-      count: name === "All Sectors"
-        ? FEED.length
-        : FEED.filter((s) => name.toLowerCase().includes(s.category.toLowerCase())).length,
+      count: FEED.filter((s) => matchesCategory(s.category, name)).length,
     }));
   }, [FEED]);
 
@@ -158,12 +174,7 @@ function Dashboard() {
   const activeItem = selected ?? FEED[0] ?? null;
   const [category, setCategory] = useState("All Sectors");
   const filtered = useMemo(
-    () =>
-      category === "All Sectors"
-        ? FEED
-        : FEED.filter((s) =>
-            category.toLowerCase().includes(s.category.toLowerCase()),
-          ),
+    () => FEED.filter((s) => matchesCategory(s.category, category)),
     [category, FEED],
   );
 
@@ -835,9 +846,13 @@ function DetailPanel({ item }: { item: SaaSItem }) {
         <button className="rounded-lg bg-primary text-primary-foreground text-xs font-semibold py-2.5 flex items-center justify-center gap-1.5 hover:brightness-110 transition">
           <BellRing className="size-3.5" /> Set Alert
         </button>
-        <button className="rounded-lg border border-border-subtle bg-white/5 text-xs font-semibold py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/10 transition">
+        <Link
+          to="/saas/$id"
+          params={{ id: item.id ?? item.name.toLowerCase().replace(/\s+/g, "-") }}
+          className="rounded-lg border border-border-subtle bg-white/5 text-xs font-semibold py-2.5 flex items-center justify-center gap-1.5 hover:bg-white/10 transition"
+        >
           <ArrowUpRight className="size-3.5" /> Open report
-        </button>
+        </Link>
       </div>
     </aside>
   );
