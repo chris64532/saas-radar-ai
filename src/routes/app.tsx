@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAiSummary } from "@/lib/ai-summary";
 import {
   Activity,
   ArrowUpRight,
@@ -786,6 +788,23 @@ function DetailPanel({ item }: { item: SaaSItem }) {
     { label: "Launch Credibility", value: 71 },
     { label: "Landing Page Quality (AI)", value: 88 },
   ];
+
+  const { data: summary, isLoading } = useQuery({
+    queryKey: ["ai-summary", item.name],
+    queryFn: () =>
+      fetchAiSummary({
+        data: {
+          name: item.name,
+          tagline: item.tagline,
+          category: item.category,
+          source: item.source,
+          score: item.score,
+          growth: item.growth,
+        },
+      }),
+    staleTime: Infinity,
+  });
+
   return (
     <aside className="rounded-2xl border border-border-subtle bg-surface/60 backdrop-blur p-5 space-y-6 h-fit sticky top-24">
       <div className="flex items-start gap-3">
@@ -849,11 +868,15 @@ function DetailPanel({ item }: { item: SaaSItem }) {
         <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
           AI Summary
         </div>
-        <p className="text-xs leading-relaxed text-foreground/90">
-          Highly disruptive market entry. Strong technical moat detected via
-          repository architecture. Sentiment is 89% positive with heavy
-          engagement from senior engineers at Stripe & Vercel.
-        </p>
+        {isLoading ? (
+          <div className="space-y-1.5 animate-pulse">
+            <div className="h-2.5 w-full rounded bg-white/5" />
+            <div className="h-2.5 w-5/6 rounded bg-white/5" />
+            <div className="h-2.5 w-4/6 rounded bg-white/5" />
+          </div>
+        ) : (
+          <p className="text-xs leading-relaxed text-foreground/90">{summary}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-2">
