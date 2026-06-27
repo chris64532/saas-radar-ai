@@ -10,7 +10,7 @@ function randomSpark(): number[] {
 
 const QUERY = `
   query {
-    posts(order: VOTES, first: 20) {
+    posts(order: VOTES, first: 50) {
       edges {
         node {
           id

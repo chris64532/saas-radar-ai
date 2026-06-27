@@ -18,7 +18,7 @@ export async function scrapeGitHub(): Promise<Partial<SaasRow>[]> {
   }
 
   const res = await fetch(
-    `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=30`,
+    `https://api.github.com/search/repositories?q=created:>${since}&sort=stars&order=desc&per_page=100`,
     { headers },
   );
 
@@ -34,7 +34,7 @@ export async function scrapeGitHub(): Promise<Partial<SaasRow>[]> {
 
   return json.items
     .filter((r) => r.description && r.description.length > 20)
-    .slice(0, 15)
+    .slice(0, 60)
     .map((r) => ({
       id: slugify(r.name),
       name: r.name,

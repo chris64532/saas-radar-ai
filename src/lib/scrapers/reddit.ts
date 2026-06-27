@@ -15,7 +15,7 @@ export async function scrapeReddit(): Promise<Partial<SaasRow>[]> {
 
   for (const sub of SUBREDDITS) {
     const res = await fetch(
-      `https://www.reddit.com/r/${sub}/new.json?limit=25`,
+      `https://www.reddit.com/r/${sub}/new.json?limit=100`,
       { headers: { "User-Agent": "saas-radar-bot/1.0" } },
     );
 
@@ -47,7 +47,7 @@ export async function scrapeReddit(): Promise<Partial<SaasRow>[]> {
       );
     });
 
-    for (const { data: post } of launchPosts.slice(0, 5)) {
+    for (const { data: post } of launchPosts.slice(0, 15)) {
       results.push({
         id: slugify(post.title.slice(0, 40)),
         name: post.title.slice(0, 60),

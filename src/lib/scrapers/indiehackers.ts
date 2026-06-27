@@ -32,7 +32,7 @@ export async function scrapeIndieHackers(): Promise<Partial<SaasRow>[]> {
   while ((m = taglinePattern.exec(html)) !== null) taglines.push(m[1]);
   while ((m = urlPattern.exec(html)) !== null) urls.push(m[1]);
 
-  const count = Math.min(names.length, taglines.length, urls.length, 15);
+  const count = Math.min(names.length, taglines.length, urls.length, 40);
 
   for (let i = 0; i < count; i++) {
     results.push({
