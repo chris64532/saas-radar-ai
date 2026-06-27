@@ -1,0 +1,161 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-signal-hot: var(--signal-hot);
+  --color-signal-rising: var(--signal-rising);
+  --color-signal-warn: var(--signal-warn);
+  --color-signal-gem: var(--signal-gem);
+
+  --color-source-gh: var(--source-gh);
+  --color-source-ph: var(--source-ph);
+  --color-source-reddit: var(--source-reddit);
+  --color-source-ih: var(--source-ih);
+
+  --shadow-glow-hot: 0 0 24px -4px color-mix(in oklab, var(--signal-hot) 50%, transparent);
+  --shadow-glow-rising: 0 0 24px -4px color-mix(in oklab, var(--signal-rising) 50%, transparent);
+  --shadow-card: 0 1px 0 0 color-mix(in oklab, white 4%, transparent) inset,
+                 0 24px 48px -24px rgb(0 0 0 / 0.6);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* Dark-first premium terminal palette */
+  --background: oklch(0.16 0.012 260);
+  --foreground: oklch(0.98 0.003 247);
+  --surface: oklch(0.205 0.014 262);
+  --surface-elevated: oklch(0.235 0.016 262);
+  --card: oklch(0.205 0.014 262);
+  --card-foreground: oklch(0.98 0.003 247);
+  --popover: oklch(0.205 0.014 262);
+  --popover-foreground: oklch(0.98 0.003 247);
+
+  --primary: oklch(0.78 0.18 162);            /* emerald signal */
+  --primary-foreground: oklch(0.16 0.012 260);
+  --secondary: oklch(0.27 0.018 262);
+  --secondary-foreground: oklch(0.98 0.003 247);
+  --muted: oklch(0.255 0.016 262);
+  --muted-foreground: oklch(0.68 0.02 258);
+  --accent: oklch(0.72 0.16 245);             /* radar blue */
+  --accent-foreground: oklch(0.16 0.012 260);
+  --destructive: oklch(0.66 0.22 25);
+  --destructive-foreground: oklch(0.98 0.003 247);
+
+  --border: oklch(1 0 0 / 8%);
+  --border-subtle: oklch(1 0 0 / 5%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.78 0.18 162);
+
+  --signal-hot: oklch(0.78 0.18 162);         /* emerald */
+  --signal-rising: oklch(0.72 0.16 245);      /* blue */
+  --signal-warn: oklch(0.82 0.17 78);         /* amber */
+  --signal-gem: oklch(0.78 0.16 320);         /* violet/pink */
+
+  --source-gh: oklch(0.78 0.14 60);           /* orange */
+  --source-ph: oklch(0.7 0.2 30);             /* red-orange (PH) */
+  --source-reddit: oklch(0.7 0.22 25);        /* red */
+  --source-ih: oklch(0.72 0.16 245);          /* blue */
+}
+
+.dark {
+  /* Keep parity — the project is dark-first; .dark just re-asserts tokens */
+  --background: oklch(0.16 0.012 260);
+  --foreground: oklch(0.98 0.003 247);
+  --surface: oklch(0.205 0.014 262);
+  --surface-elevated: oklch(0.235 0.016 262);
+  --card: oklch(0.205 0.014 262);
+  --card-foreground: oklch(0.98 0.003 247);
+  --popover: oklch(0.205 0.014 262);
+  --popover-foreground: oklch(0.98 0.003 247);
+  --primary: oklch(0.78 0.18 162);
+  --primary-foreground: oklch(0.16 0.012 260);
+  --secondary: oklch(0.27 0.018 262);
+  --secondary-foreground: oklch(0.98 0.003 247);
+  --muted: oklch(0.255 0.016 262);
+  --muted-foreground: oklch(0.68 0.02 258);
+  --accent: oklch(0.72 0.16 245);
+  --accent-foreground: oklch(0.16 0.012 260);
+  --destructive: oklch(0.66 0.22 25);
+  --destructive-foreground: oklch(0.98 0.003 247);
+  --border: oklch(1 0 0 / 8%);
+  --border-subtle: oklch(1 0 0 / 5%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.78 0.18 162);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(800px circle at 0% 0%, color-mix(in oklab, var(--signal-hot) 6%, transparent), transparent 50%),
+      radial-gradient(900px circle at 100% 10%, color-mix(in oklab, var(--signal-rising) 6%, transparent), transparent 55%);
+    background-attachment: fixed;
+  }
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@utility radar-sweep {
+  position: relative;
+  overflow: hidden;
+}
+@utility live-dot {
+  animation: pulse-dot 1.6s ease-in-out infinite;
+}
+@utility ticker-track {
+  animation: ticker 40s linear infinite;
+}
