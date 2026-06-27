@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bookmark, Search, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { SaasCard } from "@/components/saas-card";
+import { fetchFeed } from "@/lib/fetch-feed";
 import { SAAS } from "@/lib/mock-saas";
 
 export const Route = createFileRoute("/favorites")({
@@ -11,9 +13,21 @@ export const Route = createFileRoute("/favorites")({
 });
 
 function Favorites() {
-  const [saved, setSaved] = useState(SAAS.slice(0, 6).map((s) => s.id));
+  const { data: feed = [] } = useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchFeed(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const [saved, setSaved] = useState<string[]>([]);
   const [q, setQ] = useState("");
-  const items = SAAS.filter((s) => saved.includes(s.id) && (!q || s.name.toLowerCase().includes(q.toLowerCase())));
+
+  // Build a lookup from feed + mock fallback
+  const allItems = feed.length > 0
+    ? feed.map((s) => ({ ...s, detectedAt: s.detected_at ?? "" }))
+    : SAAS.map((s) => ({ ...s, detected_at: s.detectedAt }));
+
+  const items = allItems.filter((s) => saved.includes(s.id) && (!q || s.name.toLowerCase().includes(q.toLowerCase())));
 
   return (
     <AppShell title="Favorites" subtitle={`${saved.length} SaaS bookmarked for deep tracking`}>

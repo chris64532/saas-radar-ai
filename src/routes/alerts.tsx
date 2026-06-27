@@ -17,13 +17,7 @@ const INITIAL: Rule[] = [
   { id: "r3", name: "Marketing risers", category: "Marketing", minScore: 60, spike: 40, on: false },
 ];
 
-const HISTORY = [
-  { t: "2m ago", saas: "Lumen AI", reason: "Score crossed 90 (+5)", level: "hot" },
-  { t: "14m ago", saas: "Foldr", reason: "MoM growth +142%", level: "rising" },
-  { t: "1h ago", saas: "Routely", reason: "Mention spike on Reddit", level: "rising" },
-  { t: "3h ago", saas: "Vaultkit", reason: "New launch on Product Hunt", level: "gem" },
-  { t: "6h ago", saas: "Synthwave", reason: "Score crossed 80", level: "hot" },
-];
+const HISTORY: { t: string; saas: string; reason: string; level: string }[] = [];
 
 function Alerts() {
   const [tab, setTab] = useState<"rules" | "history">("rules");
@@ -90,7 +84,13 @@ function Alerts() {
               <tr><th className="px-4 py-3">When</th><th className="px-4 py-3">SaaS</th><th className="px-4 py-3">Reason</th><th className="px-4 py-3">Signal</th></tr>
             </thead>
             <tbody>
-              {HISTORY.map((h, i) => (
+              {HISTORY.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    No alerts triggered yet. Set up rules to start receiving notifications.
+                  </td>
+                </tr>
+              ) : HISTORY.map((h, i) => (
                 <tr key={i} className="border-t border-border-subtle">
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{h.t}</td>
                   <td className="px-4 py-3 font-medium">{h.saas}</td>

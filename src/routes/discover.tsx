@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { SaasCard } from "@/components/saas-card";
-import { CATEGORIES, SAAS, SOURCES } from "@/lib/mock-saas";
+import { fetchFeed } from "@/lib/fetch-feed";
+import { SOURCES } from "@/lib/mock-saas";
 
 export const Route = createFileRoute("/discover")({
   component: Discover,
@@ -11,26 +12,34 @@ export const Route = createFileRoute("/discover")({
 });
 
 function Discover() {
+  const { data: feed = [] } = useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchFeed(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const categories = useMemo(() => [...new Set(feed.map((s) => s.category))].sort(), [feed]);
+
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string | null>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [minScore, setMinScore] = useState(0);
-  const [sort, setSort] = useState<"newest" | "growth" | "score">("score");
+  const [sort, setSort] = useState<"growth" | "score">("score");
 
   const filtered = useMemo(() => {
-    const list = SAAS.filter((s) =>
+    const list = feed.filter((s) =>
       (!q || s.name.toLowerCase().includes(q.toLowerCase()) || s.tagline.toLowerCase().includes(q.toLowerCase())) &&
       (!cat || s.category === cat) &&
       (!src || s.source === src) &&
       s.score >= minScore
     );
     if (sort === "growth") list.sort((a, b) => b.growth - a.growth);
-    else if (sort === "score") list.sort((a, b) => b.score - a.score);
+    else list.sort((a, b) => b.score - a.score);
     return list;
-  }, [q, cat, src, minScore, sort]);
+  }, [feed, q, cat, src, minScore, sort]);
 
   return (
-    <AppShell title="Discover" subtitle={`${filtered.length} SaaS matching your filters`}>
+    <AppShell title="Discover" subtitle={`${filtered.length} signals matching your filters`}>
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
         <aside className="space-y-5 rounded-xl border border-border-subtle bg-surface p-4">
           <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
@@ -38,7 +47,7 @@ function Discover() {
           </div>
           <FilterGroup label="Category">
             <Chip active={!cat} onClick={() => setCat(null)}>All</Chip>
-            {CATEGORIES.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}
+            {categories.map((c) => <Chip key={c} active={cat === c} onClick={() => setCat(c)}>{c}</Chip>)}
           </FilterGroup>
           <FilterGroup label="Source">
             <Chip active={!src} onClick={() => setSrc(null)}>All</Chip>
@@ -63,17 +72,36 @@ function Discover() {
             <select value={sort} onChange={(e) => setSort(e.target.value as never)} className="rounded-lg border border-border bg-surface px-3 py-2.5 text-sm">
               <option value="score">Highest score</option>
               <option value="growth">Fastest growing</option>
-              <option value="newest">Newest</option>
             </select>
           </div>
 
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((s) => <SaasCard key={s.id} saas={s} />)}
+            {filtered.map((s) => (
+              <Link key={s.id} to="/saas/$id" params={{ id: s.id }}>
+                <div className="group block rounded-xl border border-border-subtle bg-surface p-4 transition-all hover:border-primary/40 hover:bg-surface-elevated cursor-pointer">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 font-mono text-sm font-bold">
+                        {s.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold">{s.name}</div>
+                        <div className="text-xs text-muted-foreground">{s.tagline}</div>
+                      </div>
+                    </div>
+                    <span className="font-mono text-sm font-bold text-primary">{s.score}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <div className="flex gap-1.5">
+                      <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{s.category}</span>
+                      <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{s.source}</span>
+                    </div>
+                    <span className="font-mono text-xs text-primary">+{s.growth.toFixed(0)}%</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
-
-          <button className="mx-auto block rounded-lg border border-border bg-surface px-5 py-2 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground">
-            Load more
-          </button>
         </div>
       </div>
     </AppShell>

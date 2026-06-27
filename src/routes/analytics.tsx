@@ -1,42 +1,73 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Activity, TrendingUp, Users, Zap } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, TrendingUp, Zap, Flame } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { CATEGORIES, SAAS } from "@/lib/mock-saas";
 import { Sparkline } from "@/components/sparkline";
+import { fetchFeed } from "@/lib/fetch-feed";
 
 export const Route = createFileRoute("/analytics")({
   component: Analytics,
   head: () => ({ meta: [{ title: "Analytics — SaaS Radar AI" }] }),
 });
 
-const KPIS = [
-  { i: Activity, l: "SaaS scanned (30d)", v: "38,142", d: "+12.4%", up: true },
-  { i: Zap, l: "New launches", v: "1,284", d: "+18.7%", up: true },
-  { i: TrendingUp, l: "Avg growth score", v: "67.3", d: "+2.1", up: true },
-  { i: Users, l: "Breakouts (>85)", v: "47", d: "-3", up: false },
-];
-
-function gen(seed: number, n = 24, base = 40, amp = 50) {
-  let s = seed;
-  return Array.from({ length: n }, () => {
-    s = (s * 9301 + 49297) % 233280;
-    return base + (s / 233280) * amp;
-  });
-}
-
 function Analytics() {
-  const catData = CATEGORIES.map((c, i) => {
-    const inCat = SAAS.filter((s) => s.category === c);
-    return {
-      name: c,
-      count: 80 + i * 18,
-      growth: inCat.reduce((a, s) => a + s.growth, 0) / Math.max(1, inCat.length),
-      spark: gen(i + 3),
-    };
-  }).sort((a, b) => b.growth - a.growth);
+  const { data: feed = [] } = useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchFeed(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const avgScore = feed.length
+    ? (feed.reduce((s, i) => s + i.score, 0) / feed.length).toFixed(1)
+    : "—";
+  const breakouts = feed.filter((s) => s.score >= 85).length;
+  const topGrowth = feed.length
+    ? Math.max(...feed.map((s) => s.growth)).toFixed(0)
+    : "—";
+
+  const KPIS = [
+    { i: Activity, l: "Signals in feed", v: String(feed.length), d: "Updated today", up: true },
+    { i: Zap, l: "Top growth signal", v: `+${topGrowth}%`, d: "Best performer", up: true },
+    { i: TrendingUp, l: "Avg growth score", v: avgScore, d: "Across all sources", up: true },
+    { i: Flame, l: "Breakouts (≥85)", v: String(breakouts), d: "High-confidence signals", up: true },
+  ];
+
+  // Source distribution from real feed
+  const sourceCounts = feed.reduce<Record<string, number>>((acc, s) => {
+    acc[s.source] = (acc[s.source] ?? 0) + 1;
+    return acc;
+  }, {});
+  const total = feed.length || 1;
+  const sources = [
+    { n: "GitHub", key: "GitHub", c: "var(--source-gh)" },
+    { n: "Product Hunt", key: "ProductHunt", c: "var(--source-ph)" },
+    { n: "Reddit", key: "Reddit", c: "var(--source-reddit)" },
+    { n: "IndieHackers", key: "IndieHackers", c: "var(--source-ih)" },
+  ].map((s) => ({
+    ...s,
+    v: Math.round(((sourceCounts[s.key] ?? 0) / total) * 100),
+  })).sort((a, b) => b.v - a.v);
+
+  // Category breakdown from real feed
+  const catMap = feed.reduce<Record<string, { count: number; growthSum: number; spark: number[] }>>((acc, s) => {
+    if (!acc[s.category]) acc[s.category] = { count: 0, growthSum: 0, spark: [] };
+    acc[s.category].count++;
+    acc[s.category].growthSum += s.growth;
+    acc[s.category].spark.push(...(s.spark ?? []).slice(0, 2));
+    return acc;
+  }, {});
+  const catData = Object.entries(catMap).map(([name, d]) => ({
+    name,
+    count: d.count,
+    growth: d.growthSum / d.count,
+    spark: d.spark.slice(0, 16),
+  })).sort((a, b) => b.growth - a.growth);
+
+  // Chart from real scores
+  const chartData = feed.map((s) => s.score);
 
   return (
-    <AppShell title="Analytics" subtitle="Market-wide signal across the SaaS galaxy">
+    <AppShell title="Analytics" subtitle="Market-wide signal across all sources">
       <div className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {KPIS.map((k) => (
@@ -53,30 +84,23 @@ function Analytics() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 rounded-xl border border-border-subtle bg-surface p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Market activity — 90 days</div>
-              <div className="flex gap-1 text-xs">
-                {["7D", "30D", "90D"].map((t, i) => (
-                  <button key={t} className={`rounded-md px-2 py-0.5 ${i === 2 ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}>{t}</button>
-                ))}
-              </div>
+            <div className="mb-4 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+              Score distribution — current feed
             </div>
-            <BigChart data={gen(7, 60, 60, 40)} />
+            <BigChart data={chartData.length > 1 ? chartData : [50, 60, 55, 70, 65, 80, 75, 90]} />
           </div>
 
           <div className="rounded-xl border border-border-subtle bg-surface p-5">
             <div className="mb-4 text-xs font-mono uppercase tracking-wider text-muted-foreground">Source mix</div>
             <div className="space-y-3">
-              {[
-                { n: "Product Hunt", v: 38, c: "var(--source-ph)" },
-                { n: "GitHub", v: 27, c: "var(--source-gh)" },
-                { n: "Reddit", v: 21, c: "var(--source-reddit)" },
-                { n: "IndieHackers", v: 14, c: "var(--source-ih)" },
-              ].map((s) => (
+              {sources.map((s) => (
                 <div key={s.n}>
-                  <div className="flex justify-between text-xs"><span>{s.n}</span><span className="font-mono text-muted-foreground">{s.v}%</span></div>
+                  <div className="flex justify-between text-xs">
+                    <span>{s.n}</span>
+                    <span className="font-mono text-muted-foreground">{s.v}%</span>
+                  </div>
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-                    <div className="h-full rounded-full" style={{ width: `${s.v * 2.5}%`, backgroundColor: s.c }} />
+                    <div className="h-full rounded-full transition-all" style={{ width: `${s.v}%`, backgroundColor: s.c }} />
                   </div>
                 </div>
               ))}
@@ -84,31 +108,41 @@ function Analytics() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border-subtle bg-surface">
-          <div className="flex items-center justify-between border-b border-border-subtle p-5">
-            <div>
-              <h2 className="text-sm font-semibold">Trending categories</h2>
-              <p className="text-xs text-muted-foreground">Ranked by average growth score across the last 30 days</p>
+        {catData.length > 0 && (
+          <div className="rounded-xl border border-border-subtle bg-surface">
+            <div className="flex items-center justify-between border-b border-border-subtle p-5">
+              <div>
+                <h2 className="text-sm font-semibold">Trending categories</h2>
+                <p className="text-xs text-muted-foreground">Ranked by average growth across detected signals</p>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground">{catData.length} tracked</span>
             </div>
-            <span className="font-mono text-xs text-muted-foreground">{CATEGORIES.length} tracked</span>
-          </div>
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr><th className="px-5 py-3">#</th><th className="px-5 py-3">Category</th><th className="px-5 py-3">SaaS tracked</th><th className="px-5 py-3">Avg growth</th><th className="px-5 py-3">30d trend</th></tr>
-            </thead>
-            <tbody>
-              {catData.map((c, i) => (
-                <tr key={c.name} className="border-t border-border-subtle">
-                  <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</td>
-                  <td className="px-5 py-3 font-medium">{c.name}</td>
-                  <td className="px-5 py-3 font-mono text-muted-foreground">{c.count}</td>
-                  <td className="px-5 py-3 font-mono text-primary">+{c.growth.toFixed(0)}%</td>
-                  <td className="px-5 py-3"><Sparkline data={c.spark} width={140} height={28} /></td>
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-3">#</th>
+                  <th className="px-5 py-3">Category</th>
+                  <th className="px-5 py-3">Signals</th>
+                  <th className="px-5 py-3">Avg growth</th>
+                  <th className="px-5 py-3">Trend</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {catData.map((c, i) => (
+                  <tr key={c.name} className="border-t border-border-subtle">
+                    <td className="px-5 py-3 font-mono text-xs text-muted-foreground">{String(i + 1).padStart(2, "0")}</td>
+                    <td className="px-5 py-3 font-medium">{c.name}</td>
+                    <td className="px-5 py-3 font-mono text-muted-foreground">{c.count}</td>
+                    <td className="px-5 py-3 font-mono text-primary">+{c.growth.toFixed(0)}%</td>
+                    <td className="px-5 py-3">
+                      {c.spark.length > 1 && <Sparkline data={c.spark} width={140} height={28} />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </AppShell>
   );

@@ -15,10 +15,10 @@ export const Route = createFileRoute("/pricing")({
 });
 
 const PLANS = [
-  { n: "Free", m: 0, y: 0, d: "For curious operators", cta: "Start free", features: ["Daily top 10 SaaS", "1 alert rule", "7-day history", "Community support"] },
-  { n: "Pro", m: 29, y: 23, d: "For founders & marketers", cta: "Start Pro trial", featured: true, features: ["Full live feed", "10 alert rules", "90-day history", "AI growth scores", "API (1k req/day)"] },
-  { n: "Premium", m: 99, y: 79, d: "For investors & analysts", cta: "Upgrade to Premium", features: ["Everything in Pro", "Predictive scoring", "CSV / JSON exports", "Custom dashboards", "Priority support"] },
-  { n: "Business", m: 299, y: 239, d: "For teams & funds", cta: "Contact sales", features: ["Everything in Premium", "5 team seats", "Dedicated SLA", "SSO & audit logs", "White-label reports"] },
+  { n: "Free", m: 0, y: 0, d: "For curious operators", cta: "Start free", features: ["Daily top 10 signals", "1 alert rule", "7-day history", "Community support"] },
+  { n: "Pro", m: 19, y: 15, d: "For founders & marketers", cta: "Start Pro trial", featured: true, features: ["Full live feed", "10 alert rules", "90-day history", "Growth scores", "API (1k req/day)"] },
+  { n: "Premium", m: 49, y: 39, d: "For investors & analysts", cta: "Upgrade to Premium", features: ["Everything in Pro", "Predictive scoring", "CSV / JSON exports", "Custom dashboards", "Priority support"] },
+  { n: "Business", m: 99, y: 79, d: "For teams & funds", cta: "Contact sales", features: ["Everything in Premium", "5 team seats", "Dedicated SLA", "SSO & audit logs", "White-label reports"] },
 ];
 
 const MATRIX: { label: string; vals: (boolean | string)[] }[] = [
@@ -54,7 +54,7 @@ function Pricing() {
               {p.featured && <div className="mb-3 inline-block rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">Most popular</div>}
               <div className="font-mono text-xs uppercase tracking-wider text-muted-foreground">{p.n}</div>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-semibold">${yearly ? p.y : p.m}</span>
+                <span className="text-4xl font-semibold">€{yearly ? p.y : p.m}</span>
                 <span className="text-sm text-muted-foreground">/mo</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{p.d}</p>

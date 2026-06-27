@@ -61,9 +61,9 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
           <div className="rounded-lg border border-border-subtle bg-surface p-3">
             <div className="flex items-center gap-2 text-xs">
               <Activity className="h-3 w-3 text-primary live-dot" />
-              <span className="font-mono uppercase tracking-wider text-muted-foreground">Live · 1,284 scans</span>
+              <span className="font-mono uppercase tracking-wider text-muted-foreground">Live · Multi-source feed</span>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">Pro plan · 87% quota used this month</p>
+            <p className="mt-2 text-xs text-muted-foreground">Updated daily · GitHub · ProductHunt · Reddit</p>
           </div>
         </div>
       </aside>

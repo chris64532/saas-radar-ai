@@ -183,8 +183,8 @@ function Dashboard() {
       <Sidebar category={category} onChange={setCategory} categories={categories} />
 
       <main className="flex-1 min-w-0 flex flex-col">
-        <TopBar />
-        <Ticker />
+        <TopBar totalCount={FEED.length} />
+        <Ticker feed={FEED} />
 
         <div className="flex-1 px-8 py-8 space-y-10 max-w-[1600px] w-full mx-auto">
           <Hero totalCount={FEED.length} />
@@ -234,12 +234,12 @@ function Sidebar({
       </div>
 
       <nav className="p-3 space-y-0.5">
-        <SideLink icon={Activity} label="Discovery Feed" active />
-        <SideLink icon={TrendingUp} label="Rising Fast" />
-        <SideLink icon={Gem} label="Hidden Gems" badge="PRO" />
-        <SideLink icon={Bell} label="Alerts" badge="3" />
-        <SideLink icon={LineChart} label="Analytics" />
-        <SideLink icon={Cpu} label="API & Webhooks" badge="BIZ" />
+        <SideLink to="/app" icon={Activity} label="Discovery Feed" active />
+        <SideLink to="/discover" icon={TrendingUp} label="Rising Fast" />
+        <SideLink to="/favorites" icon={Gem} label="Hidden Gems" badge="PRO" />
+        <SideLink to="/alerts" icon={Bell} label="Alerts" />
+        <SideLink to="/analytics" icon={LineChart} label="Analytics" />
+        <SideLink to="/billing" icon={Cpu} label="API & Webhooks" badge="BIZ" />
       </nav>
 
       <div className="px-3 mt-2">
@@ -290,19 +290,21 @@ function Sidebar({
 }
 
 function SideLink({
+  to,
   icon: Icon,
   label,
   active,
   badge,
 }: {
+  to: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   active?: boolean;
   badge?: string;
 }) {
   return (
-    <a
-      href="#"
+    <Link
+      to={to}
       className={`flex items-center justify-between gap-3 px-2.5 py-2 rounded-md text-sm transition-colors ${
         active
           ? "bg-white/5 text-foreground"
@@ -318,7 +320,7 @@ function SideLink({
           {badge}
         </span>
       )}
-    </a>
+    </Link>
   );
 }
 
@@ -326,16 +328,16 @@ function SideLink({
 /* Top bar + ticker                                                   */
 /* ------------------------------------------------------------------ */
 
-function TopBar() {
+function TopBar({ totalCount }: { totalCount: number }) {
   return (
     <header className="h-14 border-b border-border-subtle flex items-center px-6 gap-4 sticky top-0 z-40 bg-background/80 backdrop-blur-xl">
       <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
         <span className="size-1.5 rounded-full bg-primary live-dot" />
-        <span className="uppercase tracking-widest">SCANNING_842_SOURCES</span>
+        <span className="uppercase tracking-widest">{totalCount} SIGNALS LIVE</span>
       </div>
       <div className="h-4 w-px bg-border-subtle" />
       <div className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-        MARKET · HIGH VOLATILITY
+        MULTI-SOURCE FEED
       </div>
 
       <div className="ml-auto flex items-center gap-2 max-w-md w-full">
@@ -362,18 +364,13 @@ function TopBar() {
   );
 }
 
-function Ticker() {
-  const items = [
-    { label: "FluxFlow AI", v: "+412%", up: true },
-    { label: "VectorShift", v: "+284%", up: true },
-    { label: "OmniCRM", v: "+188%", up: true },
-    { label: "StackLock", v: "+142%", up: true },
-    { label: "PromptLayer", v: "+88%", up: true },
-    { label: "FluxDB.io", v: "+67%", up: true },
-    { label: "LegacyTool", v: "-12%", up: false },
-    { label: "QueryLayer", v: "+54%", up: true },
-  ];
-  const row = [...items, ...items];
+function Ticker({ feed }: { feed: SaaSItem[] }) {
+  const items = feed.slice(0, 12).map((s) => ({
+    label: s.name,
+    v: `+${s.growth.toFixed(0)}%`,
+    up: true,
+  }));
+  const row = items.length > 0 ? [...items, ...items] : [];
   return (
     <div className="h-9 border-b border-border-subtle bg-background/40 overflow-hidden relative">
       <div className="ticker-track flex items-center gap-8 h-full whitespace-nowrap px-6 font-mono text-[11px]">
@@ -750,12 +747,13 @@ function SourceBadge({ source }: { source: Source }) {
 /* ------------------------------------------------------------------ */
 
 function DetailPanel({ item }: { item: SaaSItem }) {
+  const seed = item.score;
   const factors = [
-    { label: "Traffic Growth", value: 94 },
-    { label: "Backlink Velocity", value: 86 },
-    { label: "Social Mentions", value: 78 },
-    { label: "Launch Credibility", value: 71 },
-    { label: "Landing Page Quality (AI)", value: 88 },
+    { label: "Traffic Growth", value: Math.min(100, Math.round(seed * 1.05)) },
+    { label: "Backlink Velocity", value: Math.min(100, Math.round(seed * 0.92)) },
+    { label: "Social Mentions", value: Math.min(100, Math.round(seed * 0.83)) },
+    { label: "Launch Credibility", value: Math.min(100, Math.round(seed * 0.75)) },
+    { label: "Traction Score", value: Math.min(100, Math.round(seed * 0.94)) },
   ];
 
   // Use pre-computed summary from DB if available, otherwise call AI on demand

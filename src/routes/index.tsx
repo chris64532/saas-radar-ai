@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Activity, Radar, Sparkles, Bell, Zap, LineChart, Check } from "lucide-react";
 import { MarketingNav } from "@/components/marketing-nav";
 import { MarketingFooter } from "@/components/marketing-footer";
-import { SAAS } from "@/lib/mock-saas";
+import { fetchFeed } from "@/lib/fetch-feed";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -15,6 +16,13 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { data: feed = [] } = useQuery({
+    queryKey: ["feed"],
+    queryFn: () => fetchFeed(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const topMovers = feed.slice(0, 5);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <MarketingNav />
@@ -29,7 +37,7 @@ function Landing() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border-subtle bg-surface/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur-xl">
               <span className="h-1.5 w-1.5 rounded-full bg-primary live-dot" />
-              <span className="font-mono uppercase tracking-wider">Live · 1,284 SaaS scanned today</span>
+              <span className="font-mono uppercase tracking-wider">Live · {feed.length > 0 ? feed.length : "—"} signals detected</span>
             </div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight md:text-6xl">
               The Bloomberg terminal for{" "}
@@ -66,10 +74,10 @@ function Landing() {
                 <span className="flex items-center gap-1.5"><Activity className="h-3 w-3 text-primary live-dot" />LIVE</span>
               </div>
               <div className="grid gap-2">
-                {SAAS.slice(0, 5).map((s) => (
+                {topMovers.map((s) => (
                   <div key={s.id} className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface px-3 py-2.5 text-sm">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-7 w-7 place-items-center rounded-md bg-primary/15 font-mono text-[10px] font-bold text-primary">{s.name.slice(0,2)}</span>
+                      <span className="grid h-7 w-7 place-items-center rounded-md bg-primary/15 font-mono text-[10px] font-bold text-primary">{s.name.slice(0,2).toUpperCase()}</span>
                       <div>
                         <div className="font-medium">{s.name}</div>
                         <div className="text-xs text-muted-foreground">{s.tagline}</div>
@@ -77,7 +85,7 @@ function Landing() {
                     </div>
                     <div className="flex items-center gap-4 font-mono text-xs">
                       <span className="text-muted-foreground">{s.category}</span>
-                      <span className="text-primary">+{s.growth}%</span>
+                      <span className="text-primary">+{s.growth.toFixed(0)}%</span>
                       <span className="rounded-md bg-primary/10 px-2 py-0.5 font-semibold text-primary">{s.score}</span>
                     </div>
                   </div>
@@ -138,10 +146,10 @@ function Landing() {
           <SectionHeader eyebrow="Pricing" title="Plans for every kind of operator" />
           <div className="mt-12 grid gap-4 md:grid-cols-4">
             {[
-              { n: "Free", p: "$0", d: "Daily top 10 + 1 alert" },
-              { n: "Pro", p: "$29", d: "Full feed + 10 alerts + API", featured: true },
-              { n: "Premium", p: "$99", d: "Predictive scores + exports" },
-              { n: "Business", p: "$299", d: "Team seats + dedicated SLA" },
+              { n: "Free", p: "€0", d: "Daily top 10 + 1 alert" },
+              { n: "Pro", p: "€19", d: "Full feed + 10 alerts + API", featured: true },
+              { n: "Premium", p: "€49", d: "Predictive scores + exports" },
+              { n: "Business", p: "€99", d: "Team seats + dedicated SLA" },
             ].map((p) => (
               <div key={p.n} className={`rounded-xl border p-6 ${p.featured ? "border-primary/40 bg-primary/5" : "border-border-subtle bg-surface"}`}>
                 <div className="text-xs font-mono uppercase tracking-wider text-muted-foreground">{p.n}</div>
