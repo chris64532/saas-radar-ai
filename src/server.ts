@@ -44,8 +44,12 @@ export default {
 
     // Pipeline endpoint — called by Vercel Cron Job daily at 6h UTC
     if (url.pathname === "/api/pipeline" && request.method === "GET") {
-      const secret = request.headers.get("x-cron-secret");
-      if (secret !== process.env["CRON_SECRET"]) {
+      const expected = process.env["CRON_SECRET"];
+      const customHeader = request.headers.get("x-cron-secret");
+      const bearerHeader = request.headers.get("authorization")?.replace("Bearer ", "");
+      const authorized = customHeader === expected || bearerHeader === expected;
+
+      if (!authorized) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { "content-type": "application/json" },
