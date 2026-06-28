@@ -18,7 +18,7 @@ function SaasDetail() {
 
   const { data: s, isLoading } = useQuery({
     queryKey: ["saas", id],
-    queryFn: () => fetchSaasById({ data: id }),
+    queryFn: () => fetchSaasById(id),
     staleTime: 5 * 60 * 1000,
   });
 
