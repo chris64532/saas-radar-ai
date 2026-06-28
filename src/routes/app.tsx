@@ -178,29 +178,71 @@ function Dashboard() {
     [category, FEED],
   );
 
+  const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
+
+  const handleSelect = (item: SaaSItem) => {
+    setSelected(item);
+    setMobileDetailOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex text-foreground font-sans">
       <Sidebar category={category} onChange={setCategory} categories={categories} />
 
-      <main className="flex-1 min-w-0 flex flex-col">
+      <main className="flex-1 min-w-0 flex flex-col pb-16 lg:pb-0">
         <TopBar totalCount={FEED.length} />
         <Ticker feed={FEED} />
 
-        <div className="flex-1 px-8 py-8 space-y-10 max-w-[1600px] w-full mx-auto">
+        <div className="flex-1 px-4 py-4 md:px-8 md:py-8 space-y-6 md:space-y-10 max-w-[1600px] w-full mx-auto">
           <Hero totalCount={FEED.length} />
           <MetricsRow feed={FEED} />
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
             <FeedTable
               items={filtered}
               selected={activeItem}
-              onSelect={setSelected}
+              onSelect={handleSelect}
             />
-            {activeItem && <DetailPanel item={activeItem} />}
+            {activeItem && <div className="hidden xl:block"><DetailPanel item={activeItem} /></div>}
           </div>
           <AlertsAndPricing />
           <Footer />
         </div>
       </main>
+
+      {/* Mobile detail panel — bottom sheet */}
+      {mobileDetailOpen && activeItem && (
+        <div className="fixed inset-0 z-50 xl:hidden" onClick={() => setMobileDetailOpen(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="absolute bottom-0 left-0 right-0 rounded-t-2xl bg-background border-t border-border-subtle max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-border-subtle">
+              <span className="text-sm font-semibold">{activeItem.name}</span>
+              <button onClick={() => setMobileDetailOpen(false)} className="text-muted-foreground hover:text-foreground text-xl leading-none px-2">×</button>
+            </div>
+            <div className="p-4">
+              <DetailPanel item={activeItem} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden border-t border-border-subtle bg-background/95 backdrop-blur-xl">
+        {[
+          { to: "/app", label: "Feed", icon: Activity },
+          { to: "/discover", icon: Search, label: "Discover" },
+          { to: "/alerts", icon: Bell, label: "Alerts" },
+          { to: "/analytics", icon: LineChart, label: "Analytics" },
+          { to: "/settings", icon: Settings, label: "Settings" },
+        ].map(({ to, icon: Icon, label }) => (
+          <Link key={to} to={to} className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-mono uppercase tracking-wide text-muted-foreground">
+            <Icon className="h-5 w-5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }
@@ -402,7 +444,7 @@ function Hero({ totalCount }: { totalCount: number }) {
           <span className="size-1.5 rounded-full bg-primary live-dot" />
           Discovery Engine · {totalCount} live signals
         </div>
-        <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-balance">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-balance">
           The Bloomberg terminal
           <br />
           for emerging{" "}
@@ -556,7 +598,38 @@ function FeedTable({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile card list */}
+      <div className="md:hidden divide-y divide-border-subtle">
+        {items.map((i) => {
+          const active = selected ? i.name === selected.name : false;
+          return (
+            <div
+              key={i.name}
+              onClick={() => onSelect(i)}
+              className={`flex items-center justify-between px-4 py-3 cursor-pointer transition-colors ${active ? "bg-primary/[0.06]" : "hover:bg-white/[0.03]"}`}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`size-9 shrink-0 rounded-lg bg-gradient-to-br ${i.tint} ring-1 ring-white/10 grid place-items-center font-bold text-xs`}>
+                  {i.initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium flex items-center gap-1.5 truncate">
+                    {i.name} <TagPill tag={i.tag} />
+                  </div>
+                  <div className="text-[11px] text-muted-foreground truncate">{i.tagline}</div>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0 ml-3">
+                <span className="font-mono text-sm font-bold text-primary">{i.score}</span>
+                <span className="font-mono text-[10px] text-primary">+{i.growth.toFixed(0)}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground bg-white/[0.02]">
@@ -576,48 +649,23 @@ function FeedTable({
                 <tr
                   key={i.name}
                   onClick={() => onSelect(i)}
-                  className={`group cursor-pointer border-t border-border-subtle transition-colors ${
-                    active ? "bg-primary/[0.06]" : "hover:bg-white/[0.03]"
-                  }`}
+                  className={`group cursor-pointer border-t border-border-subtle transition-colors ${active ? "bg-primary/[0.06]" : "hover:bg-white/[0.03]"}`}
                 >
-                  <td className="px-5 py-4 font-mono text-xs text-muted-foreground">
-                    {String(i.rank).padStart(2, "0")}
-                  </td>
+                  <td className="px-5 py-4 font-mono text-xs text-muted-foreground">{String(i.rank).padStart(2, "0")}</td>
                   <td className="px-3 py-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`size-9 rounded-lg bg-gradient-to-br ${i.tint} ring-1 ring-white/10 grid place-items-center font-bold text-xs`}
-                      >
-                        {i.initials}
-                      </div>
+                      <div className={`size-9 rounded-lg bg-gradient-to-br ${i.tint} ring-1 ring-white/10 grid place-items-center font-bold text-xs`}>{i.initials}</div>
                       <div className="min-w-0">
-                        <div className="text-sm font-medium flex items-center gap-2">
-                          {i.name}
-                          <TagPill tag={i.tag} />
-                        </div>
-                        <div className="text-[11px] text-muted-foreground truncate">
-                          {i.tagline} · {i.category}
-                        </div>
+                        <div className="text-sm font-medium flex items-center gap-2">{i.name}<TagPill tag={i.tag} /></div>
+                        <div className="text-[11px] text-muted-foreground truncate">{i.tagline} · {i.category}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4">
-                    <ScoreBar score={i.score} />
-                  </td>
-                  <td className="px-3 py-4">
-                    <span className="font-mono text-xs text-primary">
-                      +{i.growth.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td className="px-3 py-4">
-                    <Sparkline data={i.spark} />
-                  </td>
-                  <td className="px-3 py-4">
-                    <SourceBadge source={i.source} />
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <ArrowUpRight className="size-4 text-muted-foreground group-hover:text-foreground transition" />
-                  </td>
+                  <td className="px-3 py-4"><ScoreBar score={i.score} /></td>
+                  <td className="px-3 py-4"><span className="font-mono text-xs text-primary">+{i.growth.toFixed(1)}%</span></td>
+                  <td className="px-3 py-4"><Sparkline data={i.spark} /></td>
+                  <td className="px-3 py-4"><SourceBadge source={i.source} /></td>
+                  <td className="px-5 py-4 text-right"><ArrowUpRight className="size-4 text-muted-foreground group-hover:text-foreground transition" /></td>
                 </tr>
               );
             })}

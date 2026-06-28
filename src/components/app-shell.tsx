@@ -25,10 +25,19 @@ const NAV: { to: string; label: string; icon: LucideIcon }[] = [
   { to: "/docs", label: "Docs", icon: BookOpen },
 ];
 
+const MOBILE_NAV = [
+  { to: "/app", label: "Feed", icon: LayoutDashboard },
+  { to: "/discover", label: "Discover", icon: Search },
+  { to: "/alerts", label: "Alerts", icon: Bell },
+  { to: "/analytics", label: "Analytics", icon: LineChart },
+  { to: "/settings", label: "Settings", icon: Settings },
+];
+
 export function AppShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: string }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
+      {/* Desktop sidebar */}
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-border-subtle bg-surface/40 md:flex md:flex-col">
         <Link to="/" className="flex h-16 items-center gap-2 border-b border-border-subtle px-5">
           <div className="grid h-8 w-8 place-items-center rounded-md bg-primary/15 ring-1 ring-primary/30">
@@ -67,13 +76,23 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
           </div>
         </div>
       </aside>
-      <main className="flex min-h-screen flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border-subtle bg-background/80 px-6 backdrop-blur-xl">
-          <div>
-            <h1 className="text-base font-semibold tracking-tight">{title}</h1>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-          </div>
+
+      {/* Main content */}
+      <main className="flex min-h-screen flex-1 flex-col pb-20 md:pb-0">
+        <header className="sticky top-0 z-30 flex h-14 md:h-16 items-center justify-between border-b border-border-subtle bg-background/80 px-4 md:px-6 backdrop-blur-xl">
           <div className="flex items-center gap-3">
+            {/* Mobile logo */}
+            <Link to="/" className="flex items-center gap-2 md:hidden">
+              <div className="grid h-7 w-7 place-items-center rounded-md bg-primary/15 ring-1 ring-primary/30">
+                <Radar className="h-3.5 w-3.5 text-primary" />
+              </div>
+            </Link>
+            <div>
+              <h1 className="text-sm md:text-base font-semibold tracking-tight">{title}</h1>
+              {subtitle && <p className="hidden sm:block text-xs text-muted-foreground">{subtitle}</p>}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 md:gap-3">
             <button className="hidden items-center gap-2 rounded-md border border-border-subtle bg-surface px-3 py-1.5 text-xs text-muted-foreground md:flex">
               <Search className="h-3.5 w-3.5" />
               Search SaaS…
@@ -84,8 +103,27 @@ export function AppShell({ children, title, subtitle }: { children: ReactNode; t
             </div>
           </div>
         </header>
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 p-4 md:p-6">{children}</div>
       </main>
+
+      {/* Mobile bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden border-t border-border-subtle bg-background/95 backdrop-blur-xl">
+        {MOBILE_NAV.map((item) => {
+          const active = pathname === item.to || (item.to !== "/app" && pathname.startsWith(item.to));
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-mono uppercase tracking-wide transition-colors ${
+                active ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <item.icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
