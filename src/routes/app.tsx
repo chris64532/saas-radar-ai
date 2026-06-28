@@ -800,37 +800,35 @@ function DetailPanel({ item }: { item: SaaSItem }) {
         </div>
       </div>
 
-      <div className="rounded-xl bg-background/60 border border-border-subtle p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
-            Growth — last 7 days
-          </span>
-          <span className="text-[11px] font-mono text-primary">
-            +{item.growth.toFixed(1)}%
-          </span>
-        </div>
-        <BigSparkline data={item.spark} />
+      {/* Key stats grid */}
+      <div className="grid grid-cols-2 gap-2">
+        {[
+          { label: "Growth signal", value: `+${item.growth.toFixed(0)}%`, accent: true },
+          { label: "Score", value: `${item.score}/100`, accent: true },
+          { label: "Source", value: item.source },
+          { label: "Category", value: item.category },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg bg-background/60 border border-border-subtle p-3">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-1">{s.label}</div>
+            <div className={`font-mono text-sm font-semibold ${s.accent ? "text-primary" : "text-foreground"}`}>{s.value}</div>
+          </div>
+        ))}
       </div>
 
+      {/* Score bar */}
       <div>
-        <div className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-3">
-          Score Breakdown
+        <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-muted-foreground mb-2">
+          <span>Growth Score</span>
+          <span>{item.score}/100</span>
         </div>
-        <div className="space-y-2.5">
-          {factors.map((f) => (
-            <div key={f.label} className="space-y-1">
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{f.label}</span>
-                <span className="font-mono">{f.value}</span>
-              </div>
-              <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-accent to-primary"
-                  style={{ width: `${f.value}%` }}
-                />
-              </div>
-            </div>
-          ))}
+        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-accent to-primary rounded-full transition-all"
+            style={{ width: `${item.score}%` }}
+          />
+        </div>
+        <div className="flex justify-between text-[10px] text-muted-foreground mt-1 font-mono">
+          <span>0</span><span>50</span><span>100</span>
         </div>
       </div>
 
