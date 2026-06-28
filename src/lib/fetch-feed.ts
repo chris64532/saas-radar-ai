@@ -1,26 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabase, type SaasRow } from "./supabase";
 import { SAAS } from "./mock-saas";
 
 export const fetchFeed = createServerFn({ method: "GET" }).handler(async () => {
   try {
-    const { data, error } = await supabase
-      .from("saas_items")
-      .select("*")
-      .order("score", { ascending: false })
-      .limit(50);
+    const base = process.env["VERCEL_URL"]
+      ? `https://${process.env["VERCEL_URL"]}`
+      : "http://localhost:3000";
 
-    if (error) {
-      console.error("[fetchFeed] Supabase error:", error.message);
-      return fallback();
-    }
+    const res = await fetch(`${base}/api/feed`);
+    if (!res.ok) throw new Error(`Feed fetch failed: ${res.status}`);
+
+    const data = await res.json() as Record<string, unknown>[];
 
     if (!data || data.length === 0) {
-      console.warn("[fetchFeed] Supabase returned 0 rows — using mock fallback");
+      console.warn("[fetchFeed] /api/feed returned 0 rows — using mock fallback");
       return fallback();
     }
 
-    console.log(`[fetchFeed] Loaded ${data.length} items from Supabase`);
+    console.log(`[fetchFeed] Loaded ${data.length} items from /api/feed`);
     return data.map(toFeedItem);
   } catch (err) {
     console.error("[fetchFeed] Exception:", err);
@@ -44,19 +41,19 @@ function fallback() {
   }));
 }
 
-function toFeedItem(row: SaasRow) {
+function toFeedItem(row: Record<string, unknown>) {
   return {
-    id: row.id,
-    name: row.name,
-    tagline: row.tagline,
-    category: row.category,
-    source: row.source,
-    score: row.score,
-    growth: row.growth,
-    url: row.url,
-    spark: row.spark ?? [],
-    ai_summary: row.ai_summary,
-    detected_at: row.detected_at,
+    id: String(row["id"] ?? ""),
+    name: String(row["name"] ?? ""),
+    tagline: String(row["tagline"] ?? ""),
+    category: String(row["category"] ?? ""),
+    source: String(row["source"] ?? "GitHub") as "GitHub" | "ProductHunt" | "Reddit" | "IndieHackers",
+    score: Number(row["score"] ?? 0),
+    growth: Number(row["growth"] ?? 0),
+    url: String(row["url"] ?? ""),
+    spark: (row["spark"] as number[]) ?? [],
+    ai_summary: String(row["ai_summary"] ?? ""),
+    detected_at: String(row["detected_at"] ?? ""),
   };
 }
 

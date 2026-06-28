@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { runPipeline } from "./lib/pipeline";
+import { getSupabase } from "./lib/supabase";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -41,6 +42,30 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
+
+    // Feed endpoint — returns SaaS items from Supabase
+    if (url.pathname === "/api/feed" && request.method === "GET") {
+      try {
+        const db = getSupabase();
+        const { data, error } = await db
+          .from("saas_items")
+          .select("*")
+          .order("score", { ascending: false })
+          .limit(100);
+
+        if (error) throw new Error(error.message);
+
+        return new Response(JSON.stringify(data ?? []), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+    }
 
     // Pipeline endpoint — called by Vercel Cron Job daily at 6h UTC
     if (url.pathname === "/api/pipeline" && request.method === "GET") {
