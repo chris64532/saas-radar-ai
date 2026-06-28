@@ -45,52 +45,27 @@ Produit:
   }
 }
 
-// Check if a URL is still alive (simple HEAD request)
-async function isUrlAlive(url: string): Promise<boolean> {
-  if (!url || url.includes("example.com")) return false;
-  try {
-    const res = await fetch(url, {
-      method: "HEAD",
-      signal: AbortSignal.timeout(5000),
-    });
-    return res.status < 400;
-  } catch {
-    return false;
-  }
-}
-
 async function isObsolete(item: SaasRow): Promise<boolean> {
-  // Items older than 90 days with score below 40 are candidates
   const age = Date.now() - new Date(item.detected_at).getTime();
   const daysOld = age / (1000 * 60 * 60 * 24);
 
-  if (daysOld < 30) return false; // Keep recent items always
-
-  // Check URL liveness
-  const alive = await isUrlAlive(item.url);
-  if (!alive) return true;
+  // Only consider deletion after 90 days AND very low score
+  if (daysOld < 90) return false;
+  if (item.score >= 30) return false;
 
   // Ask Haiku if the product seems dead/abandoned
-  if (daysOld > 60 && item.score < 40) {
-    const message = await anthropic.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 50,
-      messages: [
-        {
-          role: "user",
-          content: `Is this SaaS product likely abandoned or shut down? Answer only "yes" or "no".
-Name: ${item.name}
-Description: ${item.tagline}
-Score: ${item.score}/100
-Detected: ${Math.round(daysOld)} days ago`,
-        },
-      ],
-    });
-    const answer = message.content[0].type === "text" ? message.content[0].text.toLowerCase() : "";
-    return answer.includes("yes");
-  }
-
-  return false;
+  const message = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 10,
+    messages: [
+      {
+        role: "user",
+        content: `Is this SaaS likely shut down or abandoned? Answer only "yes" or "no". Name: ${item.name}, Description: ${item.tagline}`,
+      },
+    ],
+  });
+  const answer = message.content[0].type === "text" ? message.content[0].text.toLowerCase() : "";
+  return answer.includes("yes");
 }
 
 async function runCleanup(): Promise<{ removed: number; errors: string[] }> {
