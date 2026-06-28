@@ -111,8 +111,28 @@ function SaasDetail() {
               </ul>
             </Card>
 
-            <Card title="Growth — last 30 days" icon={Activity}>
-              <GrowthChart data={[...s.spark, ...s.spark.map((v: number) => v + 10)]} />
+            <Card title="Score breakdown" icon={Activity}>
+              <div className="space-y-3">
+                {[
+                  { label: "Growth momentum", value: Math.min(100, Math.round(s.score * 1.05)) },
+                  { label: "Source credibility", value: Math.min(100, Math.round(s.score * 0.92)) },
+                  { label: "Signal strength", value: Math.min(100, Math.round(s.score * 0.83)) },
+                  { label: "Market timing", value: Math.min(100, Math.round(s.score * 0.75)) },
+                ].map((f) => (
+                  <div key={f.label}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">{f.label}</span>
+                      <span className="font-mono">{f.value}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-accent to-primary"
+                        style={{ width: `${f.value}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </Card>
           </div>
 
