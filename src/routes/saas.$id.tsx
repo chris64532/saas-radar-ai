@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, ExternalLink, Sparkles, TrendingUp, Activity, Eye, Link2, Github } from "lucide-react";
+import { ArrowUpRight, ExternalLink, Sparkles, TrendingUp, Activity, Calendar, BarChart2, Github } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/app-shell";
 import { ScoreRing } from "@/components/score-ring";
@@ -119,10 +119,10 @@ function SaasDetail() {
           <div className="space-y-6">
             <Card title="Metrics">
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Metric icon={Eye} label="Traffic" value={`${(8.2 + s.score / 30).toFixed(1)}k/mo`} />
-                <Metric icon={Link2} label="Backlinks" value={`${412 + s.score * 4}`} />
-                <Metric icon={TrendingUp} label="Growth" value={`+${s.growth}%`} accent />
-                <Metric icon={Sparkles} label="Signal" value={`${Math.round(s.score * 0.92)}`} />
+                <Metric icon={BarChart2} label="Growth Score" value={`${s.score}/100`} accent />
+                <Metric icon={TrendingUp} label="7d Growth" value={`+${s.growth.toFixed(0)}%`} accent />
+                <Metric icon={Activity} label="Source" value={s.source} />
+                <Metric icon={Calendar} label="Detected" value={s.detected_at ? new Date(s.detected_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "Today"} />
               </dl>
             </Card>
             <Card title="Source">
@@ -160,7 +160,7 @@ function Card({ title, icon: Icon, children }: { title: string; icon?: typeof Sp
   );
 }
 
-function Metric({ icon: Icon, label, value, accent }: { icon: typeof Eye; label: string; value: string; accent?: boolean }) {
+function Metric({ icon: Icon, label, value, accent }: { icon: typeof Activity; label: string; value: string; accent?: boolean }) {
   return (
     <div className="rounded-lg border border-border-subtle bg-background p-3">
       <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase text-muted-foreground">
