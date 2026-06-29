@@ -16,7 +16,7 @@ function Favorites() {
   const { data: feed = [] } = useQuery({
     queryKey: ["feed"],
     queryFn: () => fetchFeed(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const [saved, setSaved] = useState<string[]>([]);

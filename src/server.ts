@@ -57,7 +57,10 @@ export default {
 
         return new Response(JSON.stringify(data ?? []), {
           status: 200,
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            "cache-control": "no-store",
+          },
         });
       } catch (err) {
         return new Response(JSON.stringify([]), {

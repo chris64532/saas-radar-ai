@@ -158,7 +158,7 @@ function Dashboard() {
   const { data: rawFeed = [] } = useQuery({
     queryKey: ["feed"],
     queryFn: () => fetchFeed(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   const FEED: SaaSItem[] = rawFeed.map((item, i) => feedItemToSaaSItem(item, i + 1));
